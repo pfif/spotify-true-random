@@ -1,5 +1,7 @@
 # To make the app run locally
 
+Make an app on https://developer.spotify.com/dashboard/. Add "https://127.0.0.1:8000" to the list of redirect.
+
 ```git
 diff --git a/.gitignore b/.gitignore
 index b0a5c34..8574fe2 100644
