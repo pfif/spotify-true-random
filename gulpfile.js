@@ -40,7 +40,6 @@ const img = () =>
   
 const js = () =>
   gulp.src('src/**/*.js')
-    .pipe(uglify.default())
     .pipe(gulp.dest('dist'))
 
 gulp.task('default', gulp.series(clean, gulp.parallel(html, css, img, js)))
