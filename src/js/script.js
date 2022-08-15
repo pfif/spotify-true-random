@@ -1,3 +1,5 @@
+// TODO Renew token every so often
+
 function shuffleSongs(song_set, limit) {
   let songs_list = Array.from(song_set)
   for (let i = songs_list.length - 1; i > 0; i--) {
