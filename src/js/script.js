@@ -26,19 +26,19 @@ const songStorage = (() => {
     resetPlayedSongsForPlaylist: (playlist_id) => {
       window.localStorage.removeItem(`spotifyrandom.playedsongs.${playlist_id}`);
     },
-    storeCurrentPlaylist: (song_list, playlist_id) => {
-      window.localStorage.setItem("spotifyrandom.currentPlaylist", JSON.stringify({"list": song_list, playlist_id: playlist_id}))
+    storeCurrentPlaylist: (song_list, playlist_id, playlist_length) => {
+      window.localStorage.setItem("spotifyrandom.currentPlaylist", JSON.stringify({"list": song_list, playlist_id: playlist_id, playlist_length: playlist_length}))
     },
 
     getCurrentPlaylist: () => {
       let data = JSON.parse(window.localStorage.getItem("spotifyrandom.currentPlaylist"))
-      return [data.list, data.playlist_id]
+      return [data.list, data.playlist_id, data.playlist_length]
     }
   }
 })();
 
 const spotifyRandom = (() => {
-  const clientId = '00aae22a1f2943df8cbe5c5f8c0bd3c3';
+  const clientId = 'fc82a69b362b44e1b5713becc23523c2';
   const redirect = 'http://127.0.0.1:8000';
   const scope = [
     'playlist-read-private',
@@ -268,7 +268,7 @@ const spotifyRandom = (() => {
 
         console.log("Final playlist", toqueue_song_list)
 
-        songStorage.storeCurrentPlaylist(toqueue_song_list, playlist_id)
+        songStorage.storeCurrentPlaylist(toqueue_song_list, playlist_id, playlist_song_list.length)
 
         spotify.setAccessToken(token());
         spotify.play({
@@ -281,10 +281,12 @@ const spotifyRandom = (() => {
       try{
         spotify.setAccessToken(token());
         let currently_playing = (await spotify.getMyCurrentPlayingTrack()).item.uri;
-        let [current_playlist, playlist_id] = songStorage.getCurrentPlaylist();
+        let [current_playlist, playlist_id, playlist_length] = songStorage.getCurrentPlaylist();
         let played_songs = songStorage.getPlayedSongsForPlaylist(playlist_id)
+        // console.log(current_playlist.includes(currently_playing), !played_songs.has(currently_playing))
         if (current_playlist.includes(currently_playing) && !played_songs.has(currently_playing)) {
           console.log("Storing new song", currently_playing, playlist_id)
+          console.log("Remaining", played_songs.size / playlist_length, playlist_length - played_songs.size)
           played_songs.add(currently_playing)
           songStorage.storePlayedSongsForPlaylist(playlist_id, played_songs)
         }
