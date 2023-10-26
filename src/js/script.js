@@ -49,6 +49,8 @@ const spotifyRandom = (() => {
   ];
   const stateKey = 'state';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let alerted = false;
+  let refreshIntervalID = "";
 
   const spotify = new SpotifyWebApi();
   let access;
@@ -280,18 +282,24 @@ const spotifyRandom = (() => {
     logCurrentlyPlayedSong: async () => {
       try{
         spotify.setAccessToken(token());
-        let currently_playing = (await spotify.getMyCurrentPlayingTrack()).item.uri;
-        let [current_playlist, playlist_id, playlist_length] = songStorage.getCurrentPlaylist();
-        let played_songs = songStorage.getPlayedSongsForPlaylist(playlist_id)
-        // console.log(current_playlist.includes(currently_playing), !played_songs.has(currently_playing))
-        if (current_playlist.includes(currently_playing) && !played_songs.has(currently_playing)) {
-          console.log("Storing new song", currently_playing, playlist_id)
-          console.log("Remaining", played_songs.size / playlist_length, playlist_length - played_songs.size)
-          played_songs.add(currently_playing)
-          songStorage.storePlayedSongsForPlaylist(playlist_id, played_songs)
+        let currently_playing = (await spotify.getMyCurrentPlayingTrack())?.item?.uri;
+        if (currently_playing !== undefined) {
+          let [current_playlist, playlist_id, playlist_length] = songStorage.getCurrentPlaylist();
+          let played_songs = songStorage.getPlayedSongsForPlaylist(playlist_id)
+          // console.log(current_playlist.includes(currently_playing), !played_songs.has(currently_playing))
+          if (current_playlist.includes(currently_playing) && !played_songs.has(currently_playing)) {
+            console.log("Storing new song", currently_playing, playlist_id)
+            console.log("Remaining", played_songs.size / playlist_length, playlist_length - played_songs.size)
+            played_songs.add(currently_playing)
+            songStorage.storePlayedSongsForPlaylist(playlist_id, played_songs)
+          }
         }
       } catch (e) {
         console.error(e)
+        if (!alerted) {
+          alerted = true;
+          alert("Could not reach Spotify. Please refresh the page")
+        }
       }
     },
     refresh: () => {
@@ -332,10 +340,12 @@ const spotifyRandom = (() => {
             });
           }
         });
-        setInterval(spotifyRandom.logCurrentlyPlayedSong, 1000)
+        clearInterval(refreshIntervalID)
+        refreshIntervalID = setInterval(spotifyRandom.logCurrentlyPlayedSong, 1000)
       }
     }
   };
 })();
+
 
 document.addEventListener('DOMContentLoaded', () => spotifyRandom.refresh());
